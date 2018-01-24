@@ -63,37 +63,95 @@ class processor {
         return results;
 
     }
-    //public static Map<>
-    public static Map<String, Float> divide(Map<String, float[]> count_sum){
+
+    public static Map<String, Float> divide(Map<String, float[]> count_sum){// get final result
         Map<String, Float> results = new HashMap<String, Float>();
         for (String key : count_sum.keySet()) {
             results.put(key, count_sum.get(key)[1] / count_sum.get(key)[0]);
         }
         return results;
     }
+    public static long maxim(long[] arr, int len){
+        long max=arr[0];
+        for(int i=1;i<=len-1;i++){
+            if(arr[i]>max) max =arr[i];
+        }
+        return max;
+    }
+    public static long minim(long[] arr, int len){
+        long min=arr[0];
+        for(int i=1;i<=len-1;i++){
+            if(arr[i]<min) min =arr[i];
+        }
+        return min;
+    }
+    public static double average(long[] arr, int len){
+        long sum=0;
+        for(int i=0;i<=len-1;i++){
+            sum=sum+arr[i];
+        }
+        return (double)sum/(double)len;
+    }
+
+
 }
 
+
 class runner implements Runnable{
-    public int start, end;  public static List<List<String>> listOfList;
+    public int start, end;  public static List<String> weather;
     public static Map<String, float[]> count_sum=new HashMap<String, float[]>();
     runner(int x, int y){
         start=x;end=y;
     }
     public void run() {
         float valuex[];
-
+        List<String> line;
         for (int i = start; i <=end; i++) {
-            if (count_sum.get(listOfList.get(i).get(0)) == null) {
-                valuex = new float[]{1, Float.parseFloat(listOfList.get(i).get(1))};
-                count_sum.put(listOfList.get(i).get(0), valuex);
-            } else {
-                float[] value = count_sum.get(listOfList.get(i).get(0));
-                valuex = new float[]{1 + value[0], Float.parseFloat(listOfList.get(i).get(1)) + value[1]};
-                count_sum.put(listOfList.get(i).get(0), valuex);
+            line=new ArrayList<String>(Arrays.asList(weather.get(i).split(",")));
+            if (line.get(2).equals("TMAX")) {
+                String station= line.get(0);
+                float tmax= Float.parseFloat(line.get(3));
+                if(count_sum.get(station)==null){
+                    valuex=new float[] {1, tmax};
+                    count_sum.put(station, valuex);
+                }
+                else{
+                    valuex=new float[] {1+count_sum.get(station)[0], tmax+count_sum.get(station)[1]};
+                    count_sum.put(station, valuex);
+                }
             }
         }
-
     }
+
+}
+
+class lock_runner implements Runnable{
+    public int start, end;  public static List<String> weather;
+    public static Map<String, float[]> count_sum=new HashMap<String, float[]>();
+    lock_runner(int x, int y){
+        start=x;end=y;
+    }
+    public void run() {
+        float valuex[];
+        List<String> line;
+        synchronized(count_sum) {
+            for (int i = start; i <= end; i++) {
+                line = new ArrayList<String>(Arrays.asList(weather.get(i).split(",")));
+                if (line.get(2).equals("TMAX")) {
+                    String station = line.get(0);
+                    float tmax = Float.parseFloat(line.get(3));
+                    if (count_sum.get(station) == null) {
+                        valuex = new float[]{1, tmax};
+                        count_sum.put(station, valuex);
+                    } else {
+                        valuex = new float[]{1 + count_sum.get(station)[0], tmax + count_sum.get(station)[1]};
+                        count_sum.put(station, valuex);
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 public class Main {
@@ -103,24 +161,55 @@ public class Main {
         List<String> weather=processor.load("/Users/yzh/Downloads/1912.csv");
         System.out.println("split");
         Map<String, Float> results=new HashMap<String, Float>();
-        long start=System.currentTimeMillis();
-        for(int i=0; i<=3;i++)
-        {results=processor.get_mean(processor.filter_tmax(weather));}
-        System.out.println(System.currentTimeMillis()-start);
+        long start[]=new long[4];
+        long time[]=new long[4];
+        for(int i=0; i<=3;i++) {
+            start[i]=System.currentTimeMillis();
+            results=processor.get_mean(processor.filter_tmax(weather));
+            time[i]=(System.currentTimeMillis()-start[i]);
+            }
+        System.out.println(processor.maxim(time,time.length));
+        System.out.println(processor.minim(time,time.length));
+        System.out.println(processor.average(time,time.length));
         System.out.println(results);
 
-        start=System.currentTimeMillis();
-        List<List<String>> listOfList;
+
+        Thread t1;
+        Thread t2;
         for(int i=0; i<=3;i++){
-        listOfList=processor.filter_tmax(weather); runner.listOfList=listOfList;
-        Thread t1=new Thread( new runner(0,listOfList.size()/2) );
-        Thread t2=new Thread( new runner(1 + listOfList.size()/2,listOfList.size()-1 ));
-        t1.start();
-        try{ t1.join();t2.join();}
-        catch(Exception xx) { System.out.println("error2");}
-        results=processor.divide(runner.count_sum);}
-        System.out.println(System.currentTimeMillis()-start);
+            start[i]=System.currentTimeMillis();
+            runner.weather=weather;
+            t1 =new Thread( new runner(0,weather.size()/2) );
+            t2=new Thread( new runner(1 + weather.size()/2,weather.size()-1 ));
+            t1.start();t2.start();
+            try{ t1.join();t2.join();}
+            catch(Exception xx) { System.out.println("error2");}
+            results=processor.divide(runner.count_sum);
+            time[i]=(System.currentTimeMillis()-start[i]);
+        }
+        System.out.println(processor.maxim(time,time.length));
+        System.out.println(processor.minim(time,time.length));
+        System.out.println(processor.average(time,time.length));
         System.out.println(results);
+
+
+        for(int i=0; i<=3;i++){
+            start[i]=System.currentTimeMillis();
+            lock_runner.weather=weather;
+            t1 =new Thread( new lock_runner(0,weather.size()/2) );
+            t2=new Thread( new lock_runner(1 + weather.size()/2,weather.size()-1 ));
+            t1.start();t2.start();
+            try{ t1.join();t2.join();}
+            catch(Exception xx) { System.out.println("error2");}
+            results=processor.divide(runner.count_sum);
+            time[i]=(System.currentTimeMillis()-start[i]);
+        }
+        System.out.println(processor.maxim(time,time.length));
+        System.out.println(processor.minim(time,time.length));
+        System.out.println(processor.average(time,time.length));
+        System.out.println(results);
+
+
 
         }
 
