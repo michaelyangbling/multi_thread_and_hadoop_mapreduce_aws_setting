@@ -140,6 +140,41 @@ class lock_runner implements Runnable{
 
 }
 
+class fine_lock_runner implements Runnable {
+    public int start, end;
+    public static List<String> weather;
+    public static Map<String, float[]> count_sum = new HashMap<String, float[]>();
+
+    fine_lock_runner(int x, int y) {
+        start = x;
+        end = y;
+    }
+
+    public void run() {
+        float valuex[];
+        List<String> line;
+
+        for (int i = start; i <= end; i++) {
+            line = new ArrayList<String>(Arrays.asList(weather.get(i).split(",")));
+            if (line.get(2).equals("TMAX")) {
+                String station = line.get(0);
+                float tmax = Float.parseFloat(line.get(3));
+                synchronized (count_sum) {
+                    if (count_sum.get(station) == null) {
+                        valuex = new float[]{0, 0};
+                        count_sum.put(station, valuex);
+                    }
+                }
+                synchronized(count_sum.get(station)) {
+                  valuex = new float[]{1 + count_sum.get(station)[0], tmax + count_sum.get(station)[1]};
+
+                  count_sum.put(station, valuex);
+                }
+            }
+        }
+    }
+
+}
 public class Main {
 
 
@@ -148,9 +183,9 @@ public class Main {
         System.out.println("split");
         Map<String, Float> results=new HashMap<String, Float>();
 
-        long start[]=new long[40];
-        long time[]=new long[40];
-        for(int i=0; i<=39;i++) {
+        long start[]=new long[10];
+        long time[]=new long[10];
+        for(int i=0; i<=9;i++) {
             start[i]=System.currentTimeMillis();
             sequen.weather=weather;
             sequen.run();
@@ -165,7 +200,7 @@ public class Main {
 
         Thread t1;
         Thread t2;
-        for(int i=0; i<=39;i++){
+        for(int i=0; i<=9;i++){
             start[i]=System.currentTimeMillis();
             runner.weather=weather;
             t1 =new Thread( new runner(0,weather.size()/2) );
@@ -182,7 +217,7 @@ public class Main {
         System.out.println(results); System.out.println(results.size());System.out.println("spliter");
 
 
-        for(int i=0; i<=39;i++){
+        for(int i=0; i<=9;i++){
             start[i]=System.currentTimeMillis();
             lock_runner.weather=weather;
             t1 =new Thread( new lock_runner(0,weather.size()/2) );
@@ -196,8 +231,25 @@ public class Main {
         System.out.println(processor.maxim(time,time.length));
         System.out.println(processor.minim(time,time.length));
         System.out.println(processor.average(time,time.length));
-        System.out.println(results); System.out.println(results.size());
+        System.out.println(results); System.out.println(results.size());System.out.println("spliter");
 
+
+        System.out.println(fine_lock_runner.count_sum);
+        for(int i=0; i<=9;i++){
+            start[i]=System.currentTimeMillis();
+            fine_lock_runner.weather=weather;
+            t1 =new Thread( new fine_lock_runner(0,weather.size()/2) );
+            t2=new Thread( new fine_lock_runner(1 + weather.size()/2,weather.size()-1 ));
+            t1.start();t2.start();
+            try{ t1.join();t2.join();}
+            catch(Exception xx) { System.out.println("error2");}
+            results=processor.divide(fine_lock_runner.count_sum);
+            time[i]=(System.currentTimeMillis()-start[i]);
+        }
+        System.out.println(processor.maxim(time,time.length));
+        System.out.println(processor.minim(time,time.length));
+        System.out.println(processor.average(time,time.length));
+        System.out.println(results); System.out.println(results.size());
 
 
         }
