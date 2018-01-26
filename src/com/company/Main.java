@@ -54,9 +54,13 @@ class processor {
         }
         return (double)sum/(double)len;
     }
+    public static long Fib(int n) {
+        if (n <=2) { return 1;}
+        else{return Fib(n-1)+Fib(n-2);}
+    }
 
 }
-class sequen {
+class sequen {  //this is the sequential version
     public static List<String> weather;
     public static Map<String, float[]> count_sum=new HashMap<String, float[]>();
     public static void run() {
@@ -70,10 +74,12 @@ class sequen {
                 if(count_sum.get(station)==null){
                     valuex=new float[] {1, tmax};
                     count_sum.put(station, valuex);
+                    //processor.Fib(17);
                 }
                 else{
                     valuex=new float[] {1+count_sum.get(station)[0], tmax+count_sum.get(station)[1]};
                     count_sum.put(station, valuex);
+                    //processor.Fib(17);
                 }
             }
         }
@@ -81,7 +87,7 @@ class sequen {
 
 }
 
-class no_share implements Runnable{
+class no_share implements Runnable{ //this is no-sharing version
     public int start, end;  public static List<String> weather;
     public  Map<String, float[]> count_sum=new HashMap<String, float[]>();
     no_share(int x, int y){
@@ -98,10 +104,12 @@ class no_share implements Runnable{
                 if(count_sum.get(station)==null){
                     valuex=new float[] {1, tmax};
                     count_sum.put(station, valuex);
+                    //processor.Fib(17);
                 }
                 else{
                     valuex=new float[] {1+count_sum.get(station)[0], tmax+count_sum.get(station)[1]};
                     count_sum.put(station, valuex);
+                    //processor.Fib(17);
                 }
             }
         }
@@ -110,7 +118,7 @@ class no_share implements Runnable{
 }
 
 
-class runner implements Runnable{
+class runner implements Runnable{ //this is the no-locker version
     public int start, end;  public static List<String> weather;
     public static Map<String, float[]> count_sum=new HashMap<String, float[]>();
     runner(int x, int y){
@@ -127,10 +135,12 @@ class runner implements Runnable{
                 if(count_sum.get(station)==null){
                     valuex=new float[] {1, tmax};
                     count_sum.put(station, valuex);
+                    //processor.Fib(17);
                 }
                 else{
                     valuex=new float[] {1+count_sum.get(station)[0], tmax+count_sum.get(station)[1]};
                     count_sum.put(station, valuex);
+                    //processor.Fib(17);
                 }
             }
         }
@@ -138,7 +148,7 @@ class runner implements Runnable{
 
 }
 
-class lock_runner implements Runnable{
+class lock_runner implements Runnable{  //this is coarse-lock version
     public int start, end;  public static List<String> weather;
     public static Map<String, float[]> count_sum=new HashMap<String, float[]>();
     lock_runner(int x, int y){
@@ -157,9 +167,11 @@ class lock_runner implements Runnable{
                     if (count_sum.get(station) == null) {
                         valuex = new float[]{1, tmax};
                         count_sum.put(station, valuex);
+                        //processor.Fib(17);
                     } else {
                         valuex = new float[]{1 + count_sum.get(station)[0], tmax + count_sum.get(station)[1]};
                         count_sum.put(station, valuex);
+                        //processor.Fib(17);
                     }
                 }
             }
@@ -168,7 +180,7 @@ class lock_runner implements Runnable{
 
 }
 
-class fine_lock_runner implements Runnable {
+class fine_lock_runner implements Runnable { //this is the fine-lock verision
     public int start, end;
     public static List<String> weather;
     public static Map<String, float[]> count_sum = new HashMap<String, float[]>();
@@ -195,7 +207,7 @@ class fine_lock_runner implements Runnable {
                 }
                 synchronized(count_sum.get(station)) {
                   valuex = new float[]{1 + count_sum.get(station)[0], tmax + count_sum.get(station)[1]};
-
+                  //processor.Fib(17);
                   count_sum.put(station, valuex);
                 }
             }
@@ -208,9 +220,9 @@ public class Main {
         List<String> weather=processor.load("/Users/yzh/Downloads/1912.csv");
         System.out.println("split");
         Map<String, Float> results=new HashMap<String, Float>();
-        long start[]=new long[10];
-        long time[]=new long[10];
-        for(int i=0; i<=9;i++) {
+        long start[]=new long[40];
+        long time[]=new long[40];
+        for(int i=0; i<=39;i++) {
             start[i]=System.currentTimeMillis();
             sequen.count_sum=new HashMap<String, float[]>();
             sequen.weather=weather;
@@ -221,11 +233,11 @@ public class Main {
         System.out.println(processor.maxim(time,time.length));
         System.out.println(processor.minim(time,time.length));
         System.out.println(processor.average(time,time.length));
-        System.out.println(results); System.out.println(results.size());System.out.println("spliter");
+        System.out.println(results);System.out.println("spliter");
 
         Thread t1;
         Thread t2;
-        for(int i=0; i<=9;i++){
+        for(int i=0; i<=39;i++){
             start[i]=System.currentTimeMillis();
             runner.count_sum=new HashMap<String, float[]>();
             runner.weather=weather;
@@ -240,9 +252,9 @@ public class Main {
         System.out.println(processor.maxim(time,time.length));
         System.out.println(processor.minim(time,time.length));
         System.out.println(processor.average(time,time.length));
-        System.out.println(results); System.out.println(results.size());System.out.println("spliter");
+        System.out.println(results);System.out.println("spliter");
 
-        for(int i=0; i<=9;i++){
+        for(int i=0; i<=39;i++){
             start[i]=System.currentTimeMillis();
             lock_runner.count_sum=new HashMap<String, float[]>();
             lock_runner.weather=weather;
@@ -257,9 +269,9 @@ public class Main {
         System.out.println(processor.maxim(time,time.length));
         System.out.println(processor.minim(time,time.length));
         System.out.println(processor.average(time,time.length));
-        System.out.println(results); System.out.println(results.size());System.out.println("spliter");
+        System.out.println(results); System.out.println("spliter");
 
-        for(int i=0; i<=9;i++){
+        for(int i=0; i<=39;i++){
             start[i]=System.currentTimeMillis();
             fine_lock_runner.count_sum=new HashMap<String, float[]>();
             fine_lock_runner.weather=weather;
@@ -274,12 +286,12 @@ public class Main {
         System.out.println(processor.maxim(time,time.length));
         System.out.println(processor.minim(time,time.length));
         System.out.println(processor.average(time,time.length));
-        System.out.println(results); System.out.println(results.size());System.out.println("spliter");
+        System.out.println(results);System.out.println("spliter");
 
         no_share m1=new no_share(0,weather.size()/2);
         no_share m2=new no_share(1 + weather.size()/2,weather.size()-1 );
         //float[] valuex=new float[2];
-        for(int i=0; i<=9;i++){
+        for(int i=0; i<=39;i++){
             start[i]=System.currentTimeMillis();
             no_share.weather=weather;
             m1=new no_share(0,weather.size()/2); m2=new no_share(1 + weather.size()/2,weather.size()-1 );
@@ -294,7 +306,7 @@ public class Main {
                 else {
                     float[] valuex=new float[] { m1.count_sum.get(key)[0]+m2.count_sum.get(key)[0],
                             m1.count_sum.get(key)[1]+m2.count_sum.get(key)[1] };
-                    m2.count_sum.put( key, valuex );
+                    m2.count_sum.put( key, valuex ); //processor.Fib(17);
                 }
             }
             results=processor.divide(m2.count_sum);
@@ -303,7 +315,7 @@ public class Main {
         System.out.println(processor.maxim(time,time.length));
         System.out.println(processor.minim(time,time.length));
         System.out.println(processor.average(time,time.length));
-        System.out.println(results);System.out.println(results.size());
+        System.out.println(results);
         }
 
     }
