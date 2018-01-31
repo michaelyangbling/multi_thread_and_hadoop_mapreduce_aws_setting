@@ -1,10 +1,11 @@
-package com.company;
+package com.company;// environment: Intellij JAVA IDE
+// five versions( sequential and parallel ) are coded in 5 classes
 
 import java.util.*;
 import java.io.*;
 
-class processor {
-    public static List<String> load(String path) {
+class processor { //some commons methods that are used by all 5 versions
+    public static List<String> load(String path) { //a loader routine
         Scanner sc;
         try {
             sc = new Scanner(new File(path));
@@ -26,35 +27,35 @@ class processor {
 
     }
 
-    public static Map<String, Float> divide(Map<String, float[]> count_sum){// get final result
+    public static Map<String, Float> divide(Map<String, float[]> count_sum){// get final result by count/sum
         Map<String, Float> results = new HashMap<String, Float>();
         for (String key : count_sum.keySet()) {
             results.put(key, count_sum.get(key)[1] / count_sum.get(key)[0]);
         }
         return results;
     }
-    public static long maxim(long[] arr, int len){
+    public static long maxim(long[] arr, int len){  // get max  time
         long max=arr[0];
         for(int i=1;i<=len-1;i++){
             if(arr[i]>max) max =arr[i];
         }
         return max;
     }
-    public static long minim(long[] arr, int len){
+    public static long minim(long[] arr, int len){//get min time
         long min=arr[0];
         for(int i=1;i<=len-1;i++){
             if(arr[i]<min) min =arr[i];
         }
         return min;
     }
-    public static double average(long[] arr, int len){
+    public static double average(long[] arr, int len){//get mean time
         long sum=0;
         for(int i=0;i<=len-1;i++){
             sum=sum+arr[i];
         }
         return (double)sum/(double)len;
     }
-    public static long Fib(int n) {
+    public static long Fib(int n) {  //Fib for artificial more cost, optionally
         if (n <=2) { return 1;}
         else{return Fib(n-1)+Fib(n-2);}
     }
@@ -62,13 +63,13 @@ class processor {
 }
 class sequen {  //this is the sequential version
     public static List<String> weather;
-    public static Map<String, float[]> count_sum=new HashMap<String, float[]>();
+    public static Map<String, float[]> count_sum=new HashMap<String, float[]>(); // store count and sum
     public static void run() {
         float valuex[];
         List<String> line;
         for (int i = 0; i <=weather.size()-1; i++) {
             line=new ArrayList<String>(Arrays.asList(weather.get(i).split(",")));
-            if (line.get(2).equals("TMAX")) {
+            if (line.get(2).equals("TMAX")) { //filter TMAX
                 String station= line.get(0);
                 float tmax= Float.parseFloat(line.get(3));
                 if(count_sum.get(station)==null){
@@ -163,7 +164,7 @@ class lock_runner implements Runnable{  //this is coarse-lock version
                 if (line.get(2).equals("TMAX")) {
                     String station = line.get(0);
                     float tmax = Float.parseFloat(line.get(3));
-                    synchronized(count_sum) {
+                    synchronized(count_sum) {  // put a whole lock
                     if (count_sum.get(station) == null) {
                         valuex = new float[]{1, tmax};
                         count_sum.put(station, valuex);
@@ -205,7 +206,7 @@ class fine_lock_runner implements Runnable { //this is the fine-lock verision
                         count_sum.put(station, valuex);
                     }
                 }
-                synchronized(count_sum.get(station)) {
+                synchronized(count_sum.get(station)) { //only lock on part of data structure
                   valuex = new float[]{1 + count_sum.get(station)[0], tmax + count_sum.get(station)[1]};
                   //processor.Fib(17);
                   count_sum.put(station, valuex);
@@ -217,12 +218,12 @@ class fine_lock_runner implements Runnable { //this is the fine-lock verision
 }
 public class Main {
     public static void main(String[] args) {
-        List<String> weather=processor.load("/Users/yzh/Downloads/1912.csv");
+        List<String> weather=processor.load("/Users/yzh/Downloads/1912.csv"); //load csv
         System.out.println("split");
         Map<String, Float> results=new HashMap<String, Float>();
         long start[]=new long[40];
         long time[]=new long[40];
-        for(int i=0; i<=39;i++) {
+        for(int i=0; i<=39;i++) { //loop 40 rounds for stable outcome
             start[i]=System.currentTimeMillis();
             sequen.count_sum=new HashMap<String, float[]>();
             sequen.weather=weather;
